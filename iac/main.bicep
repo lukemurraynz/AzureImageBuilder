@@ -45,7 +45,7 @@ resource azImageTemplate 'Microsoft.VirtualMachineImages/imageTemplates@2022-07-
       ]
       source: {
         type: 'PlatformImage'
-        platformImageSource: {
+ 
           publisher: vmOfferDetails.publisher
           offer: vmOfferDetails.offer
           sku: vmOfferDetails.sku
@@ -54,5 +54,5 @@ resource azImageTemplate 'Microsoft.VirtualMachineImages/imageTemplates@2022-07-
       }
   
     }
-  }
+
 
