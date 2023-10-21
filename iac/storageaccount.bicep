@@ -1,3 +1,4 @@
+
 @description('Location for all resources.')
 param location string = resourceGroup().location
 
@@ -5,7 +6,7 @@ param location string = resourceGroup().location
 param stgaccountname string
 
 resource storgeaccount 'Microsoft.Storage/storageAccounts@2023-01-01' = {
-  name: stgaccountname
+  name: toLower(stgaccountname)
   location: location
   kind: 'StorageV2'
   sku: {
@@ -14,4 +15,5 @@ resource storgeaccount 'Microsoft.Storage/storageAccounts@2023-01-01' = {
   properties: {
     accessTier: 'Hot'
   }
+  
 }
