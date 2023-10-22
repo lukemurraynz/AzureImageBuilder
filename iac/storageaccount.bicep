@@ -17,3 +17,7 @@ resource storgeaccount 'Microsoft.Storage/storageAccounts@2023-01-01' = {
   }
   
 }
+
+output storgeaccountid string = storgeaccount.id
+output storgeaccountname string = storgeaccount.name
+
