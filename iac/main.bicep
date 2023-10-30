@@ -36,9 +36,7 @@ resource uamiassignment 'Microsoft.Authorization/roleAssignments@2022-04-01' = {
 
   }
   scope: resourceGroup()
-  dependsOn: [
-    uami
-  ]
+ ccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc
 
 }
 
@@ -76,11 +74,11 @@ resource azImageTemplate 'Microsoft.VirtualMachineImages/imageTemplates@2022-07-
         type: 'SharedImage'
         galleryImageId: azImage.id
         runOutputName: 'myImageTemplateRunOutput'
-        replicationRegions: [
+    /*     replicationRegions: [
           'Australia East'
 
         ]
-
+ */
       }
     ]
     source: {
@@ -104,4 +102,7 @@ resource azImageTemplate 'Microsoft.VirtualMachineImages/imageTemplates@2022-07-
       }
     }
   }
+  dependsOn: [
+    uami
+  ]
 }
