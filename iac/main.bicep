@@ -32,11 +32,14 @@ resource uamiassignment 'Microsoft.Authorization/roleAssignments@2022-04-01' = {
   name: guid(resourceGroup().id, 'contributor')
   properties: {
     principalId: uami.properties.principalId
+    principalType: 'ServicePrincipal' 
     roleDefinitionId: resourceId('Microsoft.Authorization/roleDefinitions', 'b24988ac-6180-42a0-ab88-20f7382dd24c') // Contributor
-
+// https://stackoverflow.com/questions/70581387/azure-bicep-role-assignment-principal-does-not-exist-in-the-directory
   }
   scope: resourceGroup()
- ccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc
+  dependsOn: [
+    uami
+  ]
 
 }
 
@@ -55,6 +58,9 @@ resource azImage 'Microsoft.Compute/galleries/images@2022-03-03' = {
       sku: vmOfferDetails.sku
     }
   }
+  dependsOn: [
+    uami
+  ]
 }
 
 resource azImageTemplate 'Microsoft.VirtualMachineImages/imageTemplates@2022-07-01' = {
@@ -74,11 +80,11 @@ resource azImageTemplate 'Microsoft.VirtualMachineImages/imageTemplates@2022-07-
         type: 'SharedImage'
         galleryImageId: azImage.id
         runOutputName: 'myImageTemplateRunOutput'
-    /*     replicationRegions: [
+         replicationRegions: [
           'Australia East'
 
         ]
- */
+ 
       }
     ]
     source: {
@@ -102,7 +108,5 @@ resource azImageTemplate 'Microsoft.VirtualMachineImages/imageTemplates@2022-07-
       }
     }
   }
-  dependsOn: [
-    uami
-  ]
+ 
 }
