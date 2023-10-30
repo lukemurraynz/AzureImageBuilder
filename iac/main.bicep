@@ -37,9 +37,7 @@ resource uamiassignment 'Microsoft.Authorization/roleAssignments@2022-04-01' = {
 // https://stackoverflow.com/questions/70581387/azure-bicep-role-assignment-principal-does-not-exist-in-the-directory
   }
   scope: resourceGroup()
-  dependsOn: [
-    uami
-  ]
+
 
 }
 
