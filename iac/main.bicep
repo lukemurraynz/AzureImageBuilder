@@ -97,7 +97,7 @@ resource azImageTemplate 'Microsoft.VirtualMachineImages/imageTemplates@2022-07-
     customize: customizationsModule.outputs.customizationsOutput
 
     vmProfile: {
-      osDiskSizeGB: 128
+      osDiskSizeGB: 0 // Leave size as source image size.
 
     }
     optimize: {
