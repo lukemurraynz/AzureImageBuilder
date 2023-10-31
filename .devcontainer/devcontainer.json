@@ -30,7 +30,8 @@
 				"ms-azuretools.vscode-azureresourcegroups",
 				"ms-azuretools.vscode-bicep",
 				"editorconfig.editorconfig",
-				"BenjaminBenais.copilot-theme"
+				"BenjaminBenais.copilot-theme",
+				"ms-azure-devops.azure-pipelines"
 			]
 		}
 	}
