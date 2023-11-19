@@ -1,0 +1,80 @@
+name: Azure Image Builder - Build and Publish Image Template
+trigger:
+- main
+
+variables:
+  serviceconnection: azserviceconnections
+  overwrite: false
+
+
+pool:
+  vmImage: ubuntu-latest
+
+stages:
+
+- stage: ImageBuilderDeploy
+  jobs:
+  - deployment: Bicepstgaccount
+    displayName: 'Deploy Azure Storage Account to Azure for Apps'
+    environment: 'AzureDeployment'
+    strategy:
+      runOnce:
+        deploy:
+          steps:
+          - checkout: self
+          - task: AzureCLI@2
+            displayName: 'Deploy Bicep - Azure Storage account and IaC App Container'
+            inputs:
+              azureSubscription: $(serviceconnection) # replace with your service connection name
+              scriptType: 'pscore'
+              scriptLocation: 'inlineScript'
+              inlineScript: |
+                az group create --name $(ResourceGroupName) --location $(location) 
+                az deployment group create `
+                        --template-file $(Build.SourcesDirectory)/iac/storageaccount.bicep `
+                        --resource-group $(resourceGroupName) `
+                        --parameters location=$(location) stgaccountname=$(storageaccountname) publicaccess=false
+
+          - task: AzureCLI@2
+            displayName: 'Copy App install files to Azure Storage Account'
+            inputs:
+              azureSubscription: $(serviceconnection)
+              scriptType: 'bash'
+              scriptLocation: 'inlineScript'
+              inlineScript: |
+                az storage blob upload-batch -d 'iac' --account-name $(storageaccountname) -s $(Build.SourcesDirectory)/apps --type block --overwrite $(overwrite)
+                blobs=$(az storage blob list --account-name $(storageaccountname) --container-name 'iac' --query '[].{name:name, url:properties.url}' -o tsv)
+                echo $blobs
+
+
+  - job: ImageBuilderDeployment
+    dependsOn: Bicepstgaccount
+    displayName: 'Deploy Azure Image Builder Infrastructure'
+    steps:
+      - task: AzureCLI@2
+        displayName: ' Build Azure Image Builder Template'
+        inputs:
+          azureSubscription: $(serviceconnection) # replace with your service connection name
+          scriptType: 'pscore'
+          scriptLocation: 'inlineScript'
+          inlineScript: |
+            az group create --name $(ResourceGroupName) --location $(location) 
+            az deployment group create `
+                    --template-file $(Build.SourcesDirectory)/iac/main.bicep `
+                    --resource-group $(resourceGroupName) `
+                    --parameters location=$(location) imagetemplatename=$(imagetemplatename) stgaccountname=$(storageaccountname) # Add more parameters as needed
+
+- stage: ImageBuilderRun
+  jobs:
+  - job: ImageBuilderRun
+    displayName: 'Run Azure Image Builder Template Build'
+    steps:
+      - task: AzureCLI@2
+        displayName: 'Run Azure Image Builder'
+        inputs:
+          azureSubscription: $(serviceconnection) # replace with your service connection name
+          scriptType: 'pscore'
+          scriptLocation: 'inlineScript'
+          inlineScript: |
+            az image builder run -n $(imagetemplatename) -g $(resourceGroupName) --no-wait
+                        az image builder wait -n $(imagetemplatename) -g $(resourceGroupName) --custom "lastRunStatus.runState!='Running'"

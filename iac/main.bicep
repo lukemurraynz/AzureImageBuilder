@@ -1,6 +1,9 @@
 param location string = resourceGroup().location
-
+param imagetemplatename string
 param azComputeGalleryName string = 'myGallery'
+@description('The name of the Storage account.')
+param stgaccountname string
+
 
 param azUserAssignedManagedIdentity string = 'useri'
 
@@ -13,6 +16,9 @@ var vmOfferDetails = {
 // main.bicep
 module customizationsModule 'customizations.bicep' = {
   name: 'customizationsModule'
+   params: {
+    stgaccountname: stgaccountname
+  }
 }
 
 resource uami 'Microsoft.ManagedIdentity/userAssignedIdentities@2023-01-31' = {
@@ -62,7 +68,7 @@ resource azImage 'Microsoft.Compute/galleries/images@2022-03-03' = {
 }
 
 resource azImageTemplate 'Microsoft.VirtualMachineImages/imageTemplates@2022-07-01' = {
-  name: 'myImageTemplate'
+  name: imagetemplatename
   location: location
   identity: {
     type: 'UserAssigned'

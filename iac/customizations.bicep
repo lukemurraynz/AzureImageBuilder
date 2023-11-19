@@ -1,3 +1,6 @@
+@description('The name of the Storage account.')
+param stgaccountname string
+
 // customizations.bicep
 var customizations = [
   {
@@ -37,6 +40,15 @@ var customizations = [
     restartTimeout: '10m'
   }
   // Add more customizations here
+    {
+    type: 'PowerShell'
+    name: 'Copy BGInfo from Storage account'
+    runElevated: false
+    runAsSystem: false
+    inline: [
+      'Start-BitsTransfer -Source https://${stgaccountname}.blob.core.windows.net/iac/bginfo/BGInfo.zip -Destination $env:SystemDrive\\temp -Asynchronous -Priority normal'
+    ]
+  }
 ]
 
 output customizationsOutput array = customizations
