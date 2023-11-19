@@ -42,7 +42,7 @@ stages:
               scriptType: 'bash'
               scriptLocation: 'inlineScript'
               inlineScript: |
-                az storage blob upload-batch -d 'iac' --account-name $(storageaccountname) -s $(Build.SourcesDirectory)/apps --type block --overwrite $(overwrite)
+                az storage blob upload-batch -d 'iac' --account-name $(storageaccountname) -s $(Build.SourcesDirectory)/apps --type block --overwrite $(overwrite) --verbose
                 blobs=$(az storage blob list --account-name $(storageaccountname) --container-name 'iac' --query '[].{name:name, url:properties.url}' -o tsv)
                 echo $blobs
 
@@ -76,5 +76,5 @@ stages:
           scriptType: 'pscore'
           scriptLocation: 'inlineScript'
           inlineScript: |
-            az image builder run -n $(imagetemplatename) -g $(resourceGroupName) --no-wait
-                        az image builder wait -n $(imagetemplatename) -g $(resourceGroupName) --custom "lastRunStatus.runState!='Running'"
+            az image builder run -n $(imagetemplatename) -g $(resourceGroupName) --no-wait --verbose
+                        az image builder wait -n $(imagetemplatename) -g $(resourceGroupName) --custom "lastRunStatus.runState!='Running'" --verbose

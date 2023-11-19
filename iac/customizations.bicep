@@ -49,6 +49,33 @@ var customizations = [
       'Start-BitsTransfer -Source https://${stgaccountname}.blob.core.windows.net/iac/bginfo/BGInfo.zip -Destination $env:SystemDrive\\temp -Asynchronous -Priority normal'
     ]
   }
+   {
+    type: 'PowerShell'
+    name: 'Copy Storage Explorer from Storage account'
+    runElevated: false
+    runAsSystem: false
+    inline: [
+      'Start-BitsTransfer -Source https://${stgaccountname}.blob.core.windows.net/iac/storageexplorer/StorageExplorer-windows-x64.exe -Destination $env:SystemDrive\\temp -Asynchronous -Priority normal'
+    ]
+  }
+  {
+    type: 'PowerShell'
+    name: 'Extract BGInfo'
+    runElevated: false
+    runAsSystem: false
+    inline: [
+      'Expand-Archive -LiteralPath $env:SystemDrive\\temp\BGInfo.zip\' -DestinationPath  $env:SystemDrive\\temp\'
+    ]
+  }
+     {
+    type: 'PowerShell'
+    name: 'Install Storage Explorer'
+    runElevated: false
+    runAsSystem: false
+    inline: [
+      '$env:SystemDrive\\temp\StorageExplorer-windows-x64.exe /VERYSILENT /SUPPRESSMSGBOXES /NORESTART /ALLUSERS'
+    ]
+  }
 ]
 
 output customizationsOutput array = customizations
