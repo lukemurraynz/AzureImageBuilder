@@ -1,17 +1,21 @@
+# Define the pipeline name and trigger
 name: Azure Image Builder - Build and Publish Image Template
 trigger:
 - main
 
+# Define pipeline variables
 variables:
   serviceconnection: azserviceconnections
   overwrite: false
 
-
+# Define the VM image for the pipeline
 pool:
   vmImage: ubuntu-latest
 
+# Define the stages of the pipeline
 stages:
 
+  # First stage: Deploy Azure Storage Account
 - stage: ImageBuilderDeploy
   jobs:
   - deployment: Bicepstgaccount
@@ -22,6 +26,7 @@ stages:
         deploy:
           steps:
           - checkout: self
+           # Deploy the Bicep template for the Azure Storage account
           - task: AzureCLI@2
             displayName: 'Deploy Bicep - Azure Storage account and IaC App Container'
             inputs:
@@ -33,8 +38,9 @@ stages:
                 az deployment group create `
                         --template-file $(Build.SourcesDirectory)/iac/storageaccount.bicep `
                         --resource-group $(resourceGroupName) `
-                        --parameters location=$(location) stgaccountname=$(storageaccountname) publicaccess=false
+                        --parameters location=$(location) stgaccountname=$(storageaccountname) publicaccess=true
 
+          # Copy the app install files to the Azure Storage account
           - task: AzureCLI@2
             displayName: 'Copy App install files to Azure Storage Account'
             inputs:
@@ -46,11 +52,12 @@ stages:
                 blobs=$(az storage blob list --account-name $(storageaccountname) --container-name 'iac' --query '[].{name:name, url:properties.url}' -o tsv)
                 echo $blobs
 
-
+  # Second job: Deploy Azure Image Builder Infrastructure
   - job: ImageBuilderDeployment
     dependsOn: Bicepstgaccount
     displayName: 'Deploy Azure Image Builder Infrastructure'
     steps:
+     # Build the Azure Image Builder template
       - task: AzureCLI@2
         displayName: ' Build Azure Image Builder Template'
         inputs:
@@ -64,11 +71,13 @@ stages:
                     --resource-group $(resourceGroupName) `
                     --parameters location=$(location) imagetemplatename=$(imagetemplatename) stgaccountname=$(storageaccountname) # Add more parameters as needed
 
+# Second stage: Run Azure Image Builder Template Build
 - stage: ImageBuilderRun
   jobs:
   - job: ImageBuilderRun
     displayName: 'Run Azure Image Builder Template Build'
     steps:
+      # Run the Azure Image Builder
       - task: AzureCLI@2
         displayName: 'Run Azure Image Builder'
         inputs:
@@ -78,3 +87,16 @@ stages:
           inlineScript: |
             az image builder run -n $(imagetemplatename) -g $(resourceGroupName) --no-wait --verbose
                         az image builder wait -n $(imagetemplatename) -g $(resourceGroupName) --custom "lastRunStatus.runState!='Running'" --verbose
+
+      - task: AzureCLI@2
+        displayName: 'Deploy Bicep - Set Azure Storage account public access to false'
+        inputs:
+              azureSubscription: $(serviceconnection) # replace with your service connection name
+              scriptType: 'pscore'
+              scriptLocation: 'inlineScript'
+              inlineScript: |
+                az group create --name $(ResourceGroupName) --location $(location) 
+                az deployment group create `
+                        --template-file $(Build.SourcesDirectory)/iac/storageaccount.bicep `
+                        --resource-group $(resourceGroupName) `
+                        --parameters location=$(location) stgaccountname=$(storageaccountname) publicaccess=false
